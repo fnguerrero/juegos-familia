@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Los juegos de la familia</title>
+<meta name="description" content="Cuatro juegos por día para jugar en familia. Todos juegan lo mismo y después se comparan.">
+<meta name="theme-color" content="#F6F1E7">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --papel:#F6F1E7; --tarjeta:#FFFDF9; --tinta:#241F1A; --suave:#6E6459;
+    --linea:#E0D8C9; --verde:#3E7C4A; --amarillo:#D8A02B; --gris:#B6ADA0;
+    --rojo:#B4472F; --azul:#2E5C86;
+    --sombra:0 2px 0 rgba(36,31,26,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--papel);color:var(--tinta);
+       font:400 19px/1.6 Karla,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+       padding:0 0 40px;overflow-x:hidden}
+  h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;letter-spacing:-.01em}
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+  .wrap{max-width:680px;margin:0 auto;padding:0 20px}
+
+  /* barra */
+  .barra{position:sticky;top:0;z-index:40;background:rgba(246,241,231,.94);
+         backdrop-filter:blur(10px);border-bottom:1px solid var(--linea)}
+  .barra .wrap{display:flex;align-items:center;gap:14px;height:64px}
+  .volver{display:none;align-items:center;justify-content:center;width:46px;height:46px;
+          margin-left:-8px;border-radius:50%;font-size:26px;line-height:1;flex:none}
+  .volver:active{background:var(--linea)}
+  body.enjuego .volver{display:flex}
+  .titulo{font-family:Fraunces,serif;font-weight:600;font-size:20px;flex:1;
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fecha{font-size:14.5px;color:var(--suave);white-space:nowrap}
+
+  /* portada */
+  .intro{padding:34px 0 8px}
+  .intro h1{font-size:clamp(32px,8vw,44px);margin-bottom:12px}
+  .intro p{color:var(--suave);font-size:18px}
+  .menu{display:grid;gap:16px;padding:26px 0 34px}
+  .ficha{display:flex;align-items:center;gap:18px;width:100%;text-align:left;
+         background:var(--tarjeta);border:1px solid var(--linea);border-radius:16px;
+         padding:20px 20px;box-shadow:var(--sombra);transition:transform .12s}
+  .ficha:active{transform:translateY(2px);box-shadow:none}
+  .ficha .ico{width:54px;height:54px;border-radius:14px;flex:none;display:grid;place-items:center;
+              font-size:27px;background:var(--papel);border:1px solid var(--linea)}
+  .ficha h2{font-size:22px;margin-bottom:3px}
+  .ficha p{font-size:15.5px;color:var(--suave);line-height:1.45}
+  .ficha .listo{margin-left:auto;flex:none;font-size:13px;color:var(--verde);font-weight:700;
+                letter-spacing:.06em}
+  .pie{color:var(--suave);font-size:15px;text-align:center;padding:20px 0 0;line-height:1.6}
+
+  /* juegos */
+  .juego{display:none;padding:26px 0}
+  .juego.on{display:block}
+  .consigna{background:var(--tarjeta);border:1px solid var(--linea);border-radius:14px;
+            padding:16px 18px;color:var(--suave);font-size:16.5px;margin-bottom:22px}
+  .consigna b{color:var(--tinta);font-weight:700}
+
+  .btn{display:inline-block;background:var(--tinta);color:var(--papel);border-radius:12px;
+       padding:15px 26px;font-weight:700;font-size:17px;box-shadow:var(--sombra);
+       transition:transform .12s}
+  .btn:active{transform:translateY(2px);box-shadow:none}
+  .btn.suave{background:var(--tarjeta);color:var(--tinta);border:1px solid var(--linea)}
+  .btn.ancho{display:block;width:100%;text-align:center}
+  .acciones{display:grid;gap:12px;margin-top:24px}
+
+  /* — palabra — */
+  .grilla{display:grid;gap:8px;justify-content:center;margin:6px 0 22px}
+  .fila{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .celda{width:58px;height:58px;border:2px solid var(--linea);border-radius:8px;
+         display:grid;place-items:center;font-family:Fraunces,serif;font-weight:600;font-size:30px;
+         background:var(--tarjeta);text-transform:uppercase}
+  .celda.llena{border-color:var(--gris)}
+  .celda.bien{background:var(--verde);border-color:var(--verde);color:#fff}
+  .celda.casi{background:var(--amarillo);border-color:var(--amarillo);color:#fff}
+  .celda.mal{background:var(--gris);border-color:var(--gris);color:#fff}
+  .teclado{display:grid;gap:7px;margin-top:6px}
+  .tfila{display:flex;gap:6px;justify-content:center}
+  .tecla{flex:1;max-width:44px;height:56px;border-radius:8px;background:var(--tarjeta);
+         border:1px solid var(--linea);font-weight:700;font-size:17px;display:grid;place-items:center;
+         box-shadow:var(--sombra)}
+  .tecla.ancha{max-width:74px;font-size:14px;font-weight:700}
+  .tecla:active{transform:translateY(2px);box-shadow:none}
+  .tecla.bien{background:var(--verde);border-color:var(--verde);color:#fff}
+  .tecla.casi{background:var(--amarillo);border-color:var(--amarillo);color:#fff}
+  .tecla.mal{background:var(--gris);border-color:var(--gris);color:#fff;opacity:.75}
+  @keyframes sacude{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .sacude{animation:sacude .3s}
+
+  /* — años — */
+  .hechos{display:grid;gap:12px}
+  .hecho{display:flex;align-items:center;gap:14px;background:var(--tarjeta);
+         border:1px solid var(--linea);border-radius:14px;padding:16px 16px;box-shadow:var(--sombra);
+         text-align:left;width:100%}
+  .hecho .txt{flex:1;font-size:17px;line-height:1.4}
+  .hecho .anio{font-family:Fraunces,serif;font-weight:600;font-size:20px;color:var(--suave);
+               min-width:62px;text-align:right}
+  .hecho.bien{border-color:var(--verde);background:#F1F7F2}
+  .hecho.bien .anio{color:var(--verde)}
+  .hecho.mal{border-color:var(--rojo);background:#FBF2F0}
+  .hecho.mal .anio{color:var(--rojo)}
+  .flechas{display:flex;flex-direction:column;gap:5px;flex:none}
+  .flecha{width:42px;height:34px;border:1px solid var(--linea);border-radius:8px;
+          background:var(--papel);display:grid;place-items:center;font-size:16px}
+  .flecha:active{background:var(--linea)}
+  .flecha[disabled]{opacity:.3}
+
+  /* — trivia — */
+  .pregunta{font-family:Fraunces,serif;font-weight:600;font-size:24px;line-height:1.25;
+            margin:4px 0 20px}
+  .categoria{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--azul);
+             font-weight:700;margin-bottom:10px}
+  .opciones{display:grid;gap:11px}
+  .opcion{background:var(--tarjeta);border:1px solid var(--linea);border-radius:13px;
+          padding:16px 18px;text-align:left;font-size:17.5px;box-shadow:var(--sombra);
+          display:flex;align-items:center;gap:13px}
+  .opcion:active{transform:translateY(2px);box-shadow:none}
+  .opcion .letra{width:30px;height:30px;border-radius:50%;background:var(--papel);
+                 border:1px solid var(--linea);display:grid;place-items:center;
+                 font-weight:700;font-size:15px;flex:none}
+  .opcion.bien{border-color:var(--verde);background:#F1F7F2}
+  .opcion.bien .letra{background:var(--verde);border-color:var(--verde);color:#fff}
+  .opcion.mal{border-color:var(--rojo);background:#FBF2F0}
+  .opcion.mal .letra{background:var(--rojo);border-color:var(--rojo);color:#fff}
+  .opcion[disabled]{opacity:.65}
+  .avance{display:flex;gap:6px;margin-bottom:18px}
+  .punto{height:6px;flex:1;border-radius:3px;background:var(--linea)}
+  .punto.bien{background:var(--verde)}
+  .punto.mal{background:var(--rojo)}
+
+  /* — palabras — */
+  /* cinco arriba y cuatro abajo: nueve en una sola fila no entran en un celular */
+  .letras{display:grid;grid-template-columns:repeat(5,52px);gap:9px;justify-content:center;
+          margin:2px 0 18px}
+  .letra-b{width:52px;height:56px;border-radius:10px;background:var(--tarjeta);
+           border:1px solid var(--linea);box-shadow:var(--sombra);
+           font-family:Fraunces,serif;font-weight:600;font-size:26px;display:grid;place-items:center}
+  .letra-b:active{transform:translateY(2px);box-shadow:none}
+  .letra-b.usada{opacity:.3}
+  .escrito{min-height:60px;border-bottom:3px solid var(--linea);text-align:center;
+           font-family:Fraunces,serif;font-weight:600;font-size:32px;letter-spacing:.06em;
+           padding:6px 0 10px;margin-bottom:16px;text-transform:uppercase}
+  .halladas{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .hallada{background:#F1F7F2;border:1px solid var(--verde);color:var(--verde);
+           border-radius:8px;padding:6px 12px;font-weight:700;font-size:15.5px;text-transform:uppercase}
+  .contador{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+  .contador b{font-family:Fraunces,serif;font-size:30px;font-weight:600}
+  .contador span{color:var(--suave);font-size:16px}
+
+  /* resultado */
+  .final{background:var(--tarjeta);border:1px solid var(--linea);border-radius:16px;
+         padding:26px 22px;text-align:center;box-shadow:var(--sombra);margin-top:26px}
+  .final h3{font-size:26px;margin-bottom:8px}
+  .final p{color:var(--suave);font-size:17px}
+  .final .grande{font-family:Fraunces,serif;font-size:40px;font-weight:600;color:var(--tinta);
+                 display:block;margin:12px 0 4px}
+  .aviso{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;
+         background:var(--tinta);color:var(--papel);padding:14px 22px;border-radius:12px;
+         font-size:16px;font-weight:500;pointer-events:none;transition:opacity .25s,transform .25s;
+         z-index:60;max-width:88vw;text-align:center}
+  .aviso.ver{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:400px){
+    .celda{width:52px;height:52px;font-size:26px}
+    .tecla{height:52px}
+    body{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="barra">
+  <div class="wrap">
+    <button class="volver" id="volver" aria-label="Volver">←</button>
+    <div class="titulo" id="titulo">Los juegos de la familia</div>
+    <div class="fecha" id="fecha"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- PORTADA -->
+  <section id="portada">
+    <div class="intro">
+      <h1>Cuatro juegos por día</h1>
+      <p>Todos jugamos los mismos. Cada uno cuando puede, y después nos comparamos.</p>
+    </div>
+    <div class="menu" id="menu"></div>
+    <p class="pie">Mañana hay cuatro nuevos.<br>Al terminar cada uno te doy el resultado listo para pegar en el grupo.</p>
+  </section>
+
+  <!-- PALABRA DEL DÍA -->
+  <section class="juego" id="palabra">
+    <div class="consigna">Adiviná la palabra de <b>cinco letras</b>. Tenés seis intentos.
+      Verde es letra correcta en su lugar, amarillo es letra que está pero en otro lado.</div>
+    <div class="grilla" id="p-grilla"></div>
+    <div class="teclado" id="p-teclado"></div>
+    <div id="p-final"></div>
+  </section>
+
+  <!-- ¿EN QUÉ AÑO FUE? -->
+  <section class="juego" id="anios">
+    <div class="consigna">Ordenálos del <b>más viejo al más nuevo</b>. Movelos con las flechas
+      y cuando estés conforme, confirmá.</div>
+    <div class="hechos" id="a-lista"></div>
+    <div class="acciones"><button class="btn ancho" id="a-confirmar">Ya están ordenados</button></div>
+    <div id="a-final"></div>
+  </section>
+
+  <!-- TRIVIA -->
+  <section class="juego" id="trivia">
+    <div class="avance" id="t-avance"></div>
+    <p class="categoria" id="t-categoria"></p>
+    <h2 class="pregunta" id="t-pregunta"></h2>
+    <div class="opciones" id="t-opciones"></div>
+    <div id="t-final"></div>
+  </section>
+
+  <!-- PALABRAS ESCONDIDAS -->
+  <section class="juego" id="palabras">
+    <div class="consigna">Con estas nueve letras, armá todas las palabras que puedas.
+      Valen de <b>tres letras para arriba</b> y cada letra se usa una sola vez.</div>
+    <div class="contador"><b id="w-cuenta">0</b><span id="w-total"></span></div>
+    <div class="escrito" id="w-escrito"></div>
+    <div class="letras" id="w-letras"></div>
+    <div class="acciones">
+      <button class="btn ancho" id="w-enviar">Probar la palabra</button>
+      <button class="btn suave ancho" id="w-borrar">Borrar</button>
+      <button class="btn suave ancho" id="w-listo">Terminé</button>
+    </div>
+    <div class="halladas" id="w-halladas"></div>
+    <div id="w-final"></div>
+  </section>
+
+</div>
+
+<div class="aviso" id="aviso"></div>
+
+<script>
+/* ───────── contenido ───────── */
+
+/* palabras de cinco letras, sin acentos. Las de PALABRAS son las que salen sorteadas;
+   VALIDAS es todo lo que el juego acepta como intento. Todas tienen que ser palabras
+   de verdad: si se agrega alguna, revisar que exista y que tenga cinco letras justas. */
+const PALABRAS = ['PERRO','CIELO','NOCHE','VERDE','LIBRO','PLAZA','FUEGO','NIEVE','PLAYA','CAMPO',
+ 'QUESO','LECHE','DULCE','SALSA','TORTA','PIZZA','ASADO','YERBA','HORNO','PLATO','SILLA','TECHO',
+ 'LLAVE','RELOJ','PAPEL','LAPIZ','TINTA','CARTA','AVION','BARCO','RUEDA','MOTOR','CALLE','BANCO',
+ 'FERIA','BOLSA','BRAZO','BARBA','MANTA','JABON','PEINE','BOTAS','GORRA','AGUJA','CLAVO','ARENA',
+ 'BARRO','POLVO','LLAMA','COLOR','NEGRO','PARED','MESAS','GATOS','VIAJE','FRASE','PUNTO','NIETO',
+ 'HUEVO','ARROZ','CARNE','POLLO','MELON','FIDEO','TIGRE','OVEJA','CABRA','PATIO','CERCA','JOVEN'];
+
+const VALIDAS = new Set(PALABRAS.concat([
+ 'CASAS','MANOS','DEDOS','CARAS','BOCAS','PELOS','VOCES','RISAS','CAMAS','ROPAS','SACOS','TELAS',
+ 'LANAS','HILOS','LUCES','ROJOS','MONTE','RUTAS','PESOS','CAJAS','VASOS','COPAS','PASTA','MATES',
+ 'PISOS','SOBRE','LUNES','MUNDO','SALUD','FELIZ','TARDE','NOTAS','LETRA','LIBRE','FUERA','FALTA',
+ 'JUNTA','GENTE','PADRE','MADRE','HIJOS','PRIMO','YERNO','AMIGO','SOCIO','JEFES','OBRAS','TAREA',
+ 'HORAS','MESES','SIGLO','RATOS','MAPAS','NORTE','OESTE','LEJOS','ABAJO','ATRAS','LADOS','MEDIO',
+ 'BORDE','LINEA','CURVA','FORMA','CHICO','ALTOS','BAJOS','ANCHO','LARGO','CORTO','FINOS','DUROS',
+ 'SUAVE','LISOS','CALOR','FRIOS','TIBIO','SECOS','NUEVO','VIEJO','LENTO','DEBIL','SANOS','COMER',
+ 'BEBER','TOMAR','DEJAR','PONER','SACAR','ABRIR','SUBIR','BAJAR','SALIR','PASAR','PARAR','LLEGA',
+ 'LLEVA','TRAER','QUEDA','PERAS','HIGOS','MASAS','PANES','SALES','PAPAS','GRANO','TRIGO','CAFES',
+ 'TAZAS','OLLAS','SOPAS','GUISO','CREMA','JUGOS','FRUTA','LIMON','PALTA','MORAS','TALLO','HOJAS',
+ 'RAMAS','ROSAS','PINOS','CEDRO','SAUCE','PALMA','SELVA','LAGOS','MARES','COSTA','ISLAS','CERRO',
+ 'VALLE','NUBES','RAYOS','SOLES','LUNAS','ASTRO','PERRA','GATAS','VACAS','TOROS','CERDO','BURRO',
+ 'MULAS','POTRO','YEGUA','PATOS','GANSO','LOROS','BUHOS','PECES','RANAS','SAPOS','ABEJA','MOSCA',
+ 'ARANA','PULGA','PIOJO','LOBOS','ZORRO','PUMAS','MONOS','CEBRA','HIENA','FOCAS','PULPO','CORAL',
+ 'ALGAS','PERLA']));
+
+const HECHOS = [
+ {a:1947, t:'Se sanciona el voto femenino en la Argentina'},
+ {a:1953, t:'Se conquista el Everest por primera vez'},
+ {a:1955, t:'Aparece el primer televisor a color a la venta'},
+ {a:1969, t:'El hombre llega a la Luna'},
+ {a:1976, t:'El golpe militar en la Argentina'},
+ {a:1978, t:'El Mundial de fútbol se juega en la Argentina'},
+ {a:1982, t:'La guerra de Malvinas'},
+ {a:1983, t:'Vuelve la democracia con Alfonsín'},
+ {a:1986, t:'Maradona hace el gol con la mano a los ingleses'},
+ {a:1989, t:'Cae el Muro de Berlín'},
+ {a:1991, t:'Se disuelve la Unión Soviética'},
+ {a:1994, t:'El atentado a la AMIA'},
+ {a:1997, t:'Muere Lady Di en un accidente en París'},
+ {a:2001, t:'El corralito y los cinco presidentes en una semana'},
+ {a:2001, t:'El atentado a las Torres Gemelas'},
+ {a:2004, t:'Se funda Facebook'},
+ {a:2005, t:'Se sube el primer video a YouTube'},
+ {a:2007, t:'Sale el primer iPhone'},
+ {a:2010, t:'La Argentina aprueba el matrimonio igualitario'},
+ {a:2013, t:'Bergoglio es elegido Papa'},
+ {a:2016, t:'Muere David Bowie'},
+ {a:2020, t:'Empieza la cuarentena por el coronavirus'},
+ {a:2020, t:'Muere Maradona'},
+ {a:2022, t:'La Argentina gana el Mundial de Qatar'}
+];
+
+const TRIVIA = [
+ {c:'Geografía', p:'¿Cuál es la provincia más grande de la Argentina?', o:['Buenos Aires','Santa Cruz','Córdoba','Chubut'], r:0},
+ {c:'Geografía', p:'¿En qué provincia están las Cataratas del Iguazú?', o:['Corrientes','Misiones','Chaco','Formosa'], r:1},
+ {c:'Geografía', p:'¿Cuál es el río más largo del mundo?', o:['El Nilo','El Amazonas','El Paraná','El Danubio'], r:1},
+ {c:'Geografía', p:'¿Qué país tiene forma de bota?', o:['Grecia','Portugal','Italia','Croacia'], r:2},
+ {c:'Historia', p:'¿Quién cruzó los Andes con su ejército?', o:['Belgrano','San Martín','Güemes','Sarmiento'], r:1},
+ {c:'Historia', p:'¿Qué se celebra el 25 de mayo?', o:['La Independencia','La Revolución de Mayo','La bandera','La Constitución'], r:1},
+ {c:'Historia', p:'¿Quién creó la bandera argentina?', o:['Manuel Belgrano','Juan Manuel de Rosas','Bernardino Rivadavia','Mariano Moreno'], r:0},
+ {c:'Historia', p:'¿En qué ciudad se declaró la Independencia en 1816?', o:['Buenos Aires','Córdoba','Tucumán','Salta'], r:2},
+ {c:'Música', p:'¿Quién cantaba "Cambalache"?', o:['Carlos Gardel','Enrique Santos Discépolo','Aníbal Troilo','Roberto Goyeneche'], r:0},
+ {c:'Música', p:'¿De qué banda era Luis Alberto Spinetta al principio?', o:['Sui Generis','Almendra','Los Gatos','Vox Dei'], r:1},
+ {c:'Música', p:'¿Cuántas cuerdas tiene una guitarra criolla?', o:['Cuatro','Cinco','Seis','Siete'], r:2},
+ {c:'Música', p:'¿Quién compuso "Alfonsina y el mar"?', o:['Ariel Ramírez','Atahualpa Yupanqui','Mercedes Sosa','Astor Piazzolla'], r:0},
+ {c:'Naturaleza', p:'¿Cuántos corazones tiene un pulpo?', o:['Uno','Dos','Tres','Cuatro'], r:2},
+ {c:'Naturaleza', p:'¿Qué animal es el hornero?', o:['Un pez','Un pájaro','Un insecto','Un reptil'], r:1},
+ {c:'Naturaleza', p:'¿Cuál es el animal terrestre más rápido?', o:['El caballo','El guepardo','El avestruz','El galgo'], r:1},
+ {c:'Naturaleza', p:'¿Cuánto tarda la Tierra en dar una vuelta al Sol?', o:['Un mes','Un día','Un año','Diez años'], r:2},
+ {c:'Comida', p:'¿Qué lleva la salsa carbonara de verdad?', o:['Crema de leche','Huevo y panceta','Tomate y albahaca','Queso azul'], r:1},
+ {c:'Comida', p:'¿De dónde es originaria la papa?', o:['Irlanda','América del Sur','China','África'], r:1},
+ {c:'Comida', p:'¿Qué corte es la entraña?', o:['Del cuarto trasero','Del músculo del diafragma','De la costilla','Del lomo'], r:1},
+ {c:'Cine y TV', p:'¿Qué película argentina ganó el Oscar en 2010?', o:['La historia oficial','El secreto de sus ojos','Relatos salvajes','Nueve reinas'], r:1},
+ {c:'Cine y TV', p:'¿Cómo se llama el pueblo de Los Simpson?', o:['Shelbyville','Springfield','Quahog','Capital City'], r:1},
+ {c:'Cine y TV', p:'¿Quién dirigió "Titanic"?', o:['Steven Spielberg','James Cameron','Ridley Scott','Martin Scorsese'], r:1},
+ {c:'Cuerpo', p:'¿Cuántos huesos tiene un adulto?', o:['106','206','306','406'], r:1},
+ {c:'Cuerpo', p:'¿Cuál es el órgano más grande del cuerpo?', o:['El hígado','La piel','El intestino','El pulmón'], r:1}
+];
+
+const TABLEROS = [
+ {letras:'PANADERIA', ok:['PAN','PIE','RED','DIA','PENA','PERA','PIRA','RANA','NADA','ARDE','AIRE',
+   'PIDE','ANDE','ARENA','PADRE','NADIE','PARED','APENA','PIERNA','PIEDRA','PANADERIA']},
+ {letras:'REPUBLICA', ok:['CAL','PIE','CURA','PURA','PILA','RUBI','CABLE','PILAR','CRIBA','LUCIR',
+   'BURLA','PELUCA','REPLICA','CALIBRE','PUBLICAR','REPUBLICA']},
+ {letras:'CUADERNOS', ok:['DOS','SUR','USO','RED','ONDA','ROSA','CASO','ACERO','SONAR','CENAR',
+   'CUERDA','CANDOR','CEDROS','CUERNOS','CUERDAS','CUADERNO','CUADERNOS']},
+ {letras:'CAMIONETA', ok:['MANO','ANIMO','CANTO','MENTA','MONTE','NIETA','MACETA','CAMINO',
+   'CAMION','CAMIONETA']},
+ {letras:'PELICULAS', ok:['SAL','PIE','PILAS','PESCA','LUCES','CALLE','CALLES','PELUCA',
+   'PELUCAS','PELICULA','PELICULAS']}
+];
+
+/* ───────── base ───────── */
+
+const $ = s => document.querySelector(s);
+const hoy = new Date();
+const DIA = Math.floor((Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) - Date.UTC(2026,0,1)) / 86400000);
+const CLAVE = 'jf.' + DIA;
+
+const guardado = (() => { try { return JSON.parse(localStorage.getItem(CLAVE)) || {}; } catch(e){ return {}; } })();
+function guardar(j, dato){ guardado[j] = dato; try { localStorage.setItem(CLAVE, JSON.stringify(guardado)); } catch(e){} pintarMenu(); }
+
+$('#fecha').textContent = hoy.toLocaleDateString('es-AR', {day:'numeric', month:'long'});
+
+function avisar(txt){
+  const a = $('#aviso'); a.textContent = txt; a.classList.add('ver');
+  clearTimeout(a._t); a._t = setTimeout(() => a.classList.remove('ver'), 2200);
+}
+
+const JUEGOS = [
+  {id:'palabra',  ico:'🔤', nom:'La palabra del día',  des:'Cinco letras, seis intentos. La misma para todos.'},
+  {id:'anios',    ico:'📅', nom:'¿En qué año fue?',    des:'Cinco hechos para ordenar del más viejo al más nuevo.'},
+  {id:'trivia',   ico:'💡', nom:'Preguntas',           des:'Seis preguntas de todo un poco. Sin reloj.'},
+  {id:'palabras', ico:'✏️', nom:'Palabras escondidas', des:'Nueve letras. Cuántas palabras podés armar.'}
+];
+
+function pintarMenu(){
+  $('#menu').innerHTML = JUEGOS.map(j => `
+    <button class="ficha" data-ir="${j.id}">
+      <span class="ico">${j.ico}</span>
+      <span><span style="display:block"><b style="font:600 22px/1.1 Fraunces,serif">${j.nom}</b></span>
+        <span style="display:block;font-size:15.5px;color:var(--suave);margin-top:3px">${j.des}</span></span>
+      ${guardado[j.id] ? '<span class="listo">HECHO</span>' : ''}
+    </button>`).join('');
+}
+
+function ir(id){
+  document.querySelectorAll('.juego').forEach(s => s.classList.remove('on'));
+  const j = JUEGOS.find(x => x.id === id);
+  if (!j) { $('#portada').style.display = ''; document.body.classList.remove('enjuego');
+            $('#titulo').textContent = 'Los juegos de la familia'; location.hash = ''; return; }
+  $('#portada').style.display = 'none';
+  document.body.classList.add('enjuego');
+  $('#titulo').textContent = j.nom;
+  $('#' + id).classList.add('on');
+  scrollTo(0,0);
+  arrancar[id]();
+}
+
+addEventListener('click', ev => {
+  const f = ev.target.closest('[data-ir]');
+  if (f) { location.hash = f.dataset.ir; }
+});
+$('#volver').addEventListener('click', () => { location.hash = ''; });
+addEventListener('hashchange', () => ir(location.hash.slice(1)));
+
+/* elige sin repetir, determinista por día */
+function elegir(lista, cuantos, semilla){
+  const idx = lista.map((_,i) => i);
+  let s = (DIA + 1) * (semilla || 1) * 9301 + 49297;
+  const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  for (let i = idx.length - 1; i > 0; i--){ const k = Math.floor(r() * (i + 1)); [idx[i], idx[k]] = [idx[k], idx[i]]; }
+  return idx.slice(0, cuantos).map(i => lista[i]);
+}
+
+function compartir(texto){
+  const t = 'Los juegos de la familia · ' + hoy.toLocaleDateString('es-AR',{day:'numeric',month:'long'}) + '\n' + texto;
+  if (navigator.share) { navigator.share({text:t}).catch(()=>{}); return; }
+  navigator.clipboard.writeText(t).then(() => avisar('Copiado. Pegalo en el grupo'),
+                                        () => avisar('No pude copiarlo'));
+}
+
+function cerrar(cont, titulo, detalle, grande, textoCompartir){
+  cont.innerHTML = `<div class="final">
+      <h3>${titulo}</h3>
+      ${grande ? `<span class="grande">${grande}</span>` : ''}
+      <p>${detalle}</p>
+      <div class="acciones">
+        <button class="btn ancho" id="x-comp">Copiar para el grupo</button>
+        <button class="btn suave ancho" data-ir="">Volver a los juegos</button>
+      </div></div>`;
+  cont.querySelector('#x-comp').addEventListener('click', () => compartir(textoCompartir));
+  cont.scrollIntoView({behavior:'smooth', block:'end'});
+}
+
+const arrancar = {};
+
+/* ───────── 1. palabra del día ───────── */
+(() => {
+  const meta = PALABRAS[((DIA % PALABRAS.length) + PALABRAS.length) % PALABRAS.length];
+  const FILAS = 6;
+  let fila = 0, actual = '', terminado = false;
+  const estados = {};
+
+  arrancar.palabra = () => {
+    if ($('#p-grilla').children.length) return;
+    $('#p-grilla').innerHTML = Array.from({length:FILAS}, (_,f) =>
+      `<div class="fila" data-f="${f}">${'<div class="celda"></div>'.repeat(5)}</div>`).join('');
+    const filas = ['QWERTYUIOP','ASDFGHJKLÑ','↵ZXCVBNM⌫'];
+    $('#p-teclado').innerHTML = filas.map(f => `<div class="tfila">${
+      [...f].map(l => l === '↵' ? '<button class="tecla ancha" data-t="enter">Enviar</button>'
+                    : l === '⌫' ? '<button class="tecla ancha" data-t="del">Borrar</button>'
+                    : `<button class="tecla" data-t="${l}">${l}</button>`).join('')}</div>`).join('');
+    $('#p-teclado').addEventListener('click', ev => {
+      const t = ev.target.closest('[data-t]'); if (!t) return; tecla(t.dataset.t);
+    });
+    const g = guardado.palabra;
+    if (g) { g.intentos.forEach(x => { actual = x; enviar(true); }); }
+  };
+
+  addEventListener('keydown', ev => {
+    if (!$('#palabra').classList.contains('on')) return;
+    if (ev.key === 'Enter') tecla('enter');
+    else if (ev.key === 'Backspace') tecla('del');
+    else if (/^[a-zA-ZñÑ]$/.test(ev.key)) tecla(ev.key.toUpperCase());
+  });
+
+  function tecla(t){
+    if (terminado) return;
+    if (t === 'del') { actual = actual.slice(0,-1); pintar(); }
+    else if (t === 'enter') enviar(false);
+    else if (actual.length < 5) { actual += t; pintar(); }
+  }
+
+  function pintar(){
+    const f = $(`#p-grilla .fila[data-f="${fila}"]`); if (!f) return;
+    [...f.children].forEach((c,i) => { c.textContent = actual[i] || ''; c.classList.toggle('llena', !!actual[i]); });
+  }
+
+  function enviar(silencioso){
+    if (actual.length < 5) { if (!silencioso) { avisar('Faltan letras'); sacudir(); } return; }
+    if (!silencioso && !VALIDAS.has(actual) && actual !== meta) { avisar('Esa palabra no está en la lista'); sacudir(); return; }
+    const f = $(`#p-grilla .fila[data-f="${fila}"]`);
+    const restan = {};
+    [...meta].forEach((l,i) => { if (actual[i] !== l) restan[l] = (restan[l]||0) + 1; });
+    const marcas = [...actual].map((l,i) => {
+      if (meta[i] === l) return 'bien';
+      if (restan[l]) { restan[l]--; return 'casi'; }
+      return 'mal';
+    });
+    [...f.children].forEach((c,i) => { c.textContent = actual[i]; c.className = 'celda ' + marcas[i]; });
+    [...actual].forEach((l,i) => {
+      const orden = {mal:0, casi:1, bien:2};
+      if (!estados[l] || orden[marcas[i]] > orden[estados[l]]) estados[l] = marcas[i];
+      const k = $(`#p-teclado [data-t="${l}"]`); if (k) k.className = 'tecla ' + estados[l];
+    });
+    const ganado = actual === meta;
+    const previos = (guardado.palabra?.intentos) || [];
+    const intentos = silencioso ? previos : previos.concat([actual]);
+    fila++; const usado = actual; actual = '';
+    if (ganado || fila === FILAS) {
+      terminado = true;
+      if (!silencioso) guardar('palabra', {intentos, ganado});
+      final(intentos.length ? intentos : [usado], ganado);
+    } else if (!silencioso) guardar('palabra', {intentos, ganado:false});
+  }
+
+  function sacudir(){
+    const f = $(`#p-grilla .fila[data-f="${fila}"]`); if (!f) return;
+    f.classList.add('sacude'); setTimeout(() => f.classList.remove('sacude'), 320);
+  }
+
+  function final(intentos, ganado){
+    const cuadros = intentos.map(x => {
+      const restan = {}; [...meta].forEach((l,i) => { if (x[i] !== l) restan[l] = (restan[l]||0)+1; });
+      return [...x].map((l,i) => meta[i] === l ? '🟩' : (restan[l] && restan[l]-- ? '🟨' : '⬜')).join('');
+    }).join('\n');
+    cerrar($('#p-final'),
+      ganado ? '¡La sacaste!' : 'Se terminaron los intentos',
+      ganado ? `La adivinaste en ${intentos.length} de 6.` : `La palabra era <b>${meta}</b>.`,
+      meta,
+      `Palabra del día ${ganado ? intentos.length : 'X'}/6\n${cuadros}`);
+  }
+})();
+
+/* ───────── 2. ¿en qué año fue? ───────── */
+(() => {
+  let orden = [], listo = false;
+
+  arrancar.anios = () => {
+    if (orden.length) return;
+    orden = elegir(HECHOS, 5, 3);
+    const g = guardado.anios;
+    if (g) { orden = g.orden.map(t => HECHOS.find(h => h.t === t)); pintar(); revisar(true); }
+    else pintar();
+  };
+
+  function pintar(){
+    $('#a-lista').innerHTML = orden.map((h,i) => `
+      <div class="hecho" data-i="${i}">
+        <span class="flechas">
+          <button class="flecha" data-sube="${i}" ${i===0?'disabled':''} aria-label="Subir">▲</button>
+          <button class="flecha" data-baja="${i}" ${i===orden.length-1?'disabled':''} aria-label="Bajar">▼</button>
+        </span>
+        <span class="txt">${h.t}</span>
+        <span class="anio">${listo ? h.a : '?'}</span>
+      </div>`).join('');
+  }
+
+  $('#a-lista').addEventListener('click', ev => {
+    if (listo) return;
+    const s = ev.target.closest('[data-sube]'), b = ev.target.closest('[data-baja]');
+    if (s) { const i = +s.dataset.sube; [orden[i-1], orden[i]] = [orden[i], orden[i-1]]; pintar(); }
+    if (b) { const i = +b.dataset.baja; [orden[i+1], orden[i]] = [orden[i], orden[i+1]]; pintar(); }
+  });
+
+  $('#a-confirmar').addEventListener('click', () => revisar(false));
+
+  function revisar(silencioso){
+    listo = true; pintar();
+    $('#a-confirmar').style.display = 'none';
+    const bien = orden.map((h,i) => i === 0 || orden[i-1].a <= h.a);
+    [...$('#a-lista').children].forEach((el,i) => {
+      el.classList.add(bien[i] ? 'bien' : 'mal');
+      el.querySelectorAll('.flecha').forEach(f => f.remove());
+    });
+    const puntos = bien.filter(Boolean).length;
+    if (!silencioso) guardar('anios', {orden: orden.map(h => h.t), puntos});
+    cerrar($('#a-final'),
+      puntos === 5 ? '¡Perfecto!' : 'Así quedaron',
+      puntos === 5 ? 'Los cinco en su lugar.' : `Acertaste el lugar de ${puntos} de 5.`,
+      puntos + '/5',
+      `¿En qué año fue? ${puntos}/5\n${bien.map(b => b ? '🟩' : '🟥').join('')}`);
+  }
+})();
+
+/* ───────── 3. trivia ───────── */
+(() => {
+  let ronda = [], i = 0, aciertos = [], listo = false;
+
+  arrancar.trivia = () => {
+    if (ronda.length) return;
+    ronda = elegir(TRIVIA, 6, 7);
+    const g = guardado.trivia;
+    if (g) { aciertos = g.aciertos; listo = true; final(); pintarAvance(); return; }
+    pregunta();
+  };
+
+  function pintarAvance(){
+    $('#t-avance').innerHTML = Array.from({length:6}, (_,k) =>
+      `<span class="punto ${aciertos[k] === undefined ? '' : (aciertos[k] ? 'bien' : 'mal')}"></span>`).join('');
+  }
+
+  function pregunta(){
+    pintarAvance();
+    const q = ronda[i];
+    $('#t-categoria').textContent = q.c;
+    $('#t-pregunta').textContent = q.p;
+    $('#t-opciones').innerHTML = q.o.map((o,k) =>
+      `<button class="opcion" data-o="${k}"><span class="letra">${'ABCD'[k]}</span><span>${o}</span></button>`).join('');
+  }
+
+  $('#t-opciones').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-o]'); if (!b || listo) return;
+    const q = ronda[i], elegida = +b.dataset.o, ok = elegida === q.r;
+    aciertos[i] = ok;
+    [...$('#t-opciones').children].forEach((el,k) => {
+      el.disabled = true;
+      if (k === q.r) el.classList.add('bien');
+      else if (k === elegida) el.classList.add('mal');
+    });
+    pintarAvance();
+    setTimeout(() => {
+      i++;
+      if (i < ronda.length) pregunta();
+      else { listo = true; guardar('trivia', {aciertos}); $('#t-opciones').innerHTML = '';
+             $('#t-categoria').textContent = ''; $('#t-pregunta').textContent = ''; final(); }
+    }, ok ? 750 : 1500);
+  });
+
+  function final(){
+    const n = aciertos.filter(Boolean).length;
+    $('#t-opciones').innerHTML = ''; $('#t-categoria').textContent = ''; $('#t-pregunta').textContent = '';
+    cerrar($('#t-final'),
+      n === 6 ? '¡Las seis!' : (n >= 4 ? 'Bien ahí' : 'Para otra vez'),
+      `Acertaste ${n} de 6.`,
+      n + '/6',
+      `Preguntas ${n}/6\n${aciertos.map(a => a ? '🟩' : '🟥').join('')}`);
+  }
+})();
+
+/* ───────── 4. palabras escondidas ───────── */
+(() => {
+  let tablero, letras = [], usadas = [], halladas = [], listo = false;
+
+  arrancar.palabras = () => {
+    if (tablero) return;
+    tablero = TABLEROS[((DIA % TABLEROS.length) + TABLEROS.length) % TABLEROS.length];
+    letras = [...tablero.letras];
+    // mezcla estable por día
+    let s = DIA * 7919 + 13;
+    for (let i = letras.length - 1; i > 0; i--){
+      s = (s * 9301 + 49297) % 233280;
+      const k = Math.floor((s / 233280) * (i + 1));
+      [letras[i], letras[k]] = [letras[k], letras[i]];
+    }
+    const g = guardado.palabras;
+    if (g) { halladas = g.halladas; listo = true; }
+    $('#w-total').textContent = 'de ' + tablero.ok.length + ' palabras';
+    dibujarLetras();
+    pintar();
+    if (listo) final();
+  };
+
+  /* los botones se dibujan una sola vez; después solo se prende y apaga la clase,
+     así el botón que tocás no desaparece debajo del dedo */
+  function dibujarLetras(){
+    $('#w-letras').innerHTML = letras.map((l,i) =>
+      `<button class="letra-b" data-l="${i}">${l}</button>`).join('');
+  }
+
+  function pintar(){
+    [...$('#w-letras').children].forEach((b,i) => b.classList.toggle('usada', usadas.includes(i)));
+    $('#w-escrito').textContent = usadas.map(i => letras[i]).join('');
+    $('#w-cuenta').textContent = halladas.length;
+    $('#w-halladas').innerHTML = halladas.map(p => `<span class="hallada">${p}</span>`).join('');
+  }
+
+  $('#w-letras').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-l]'); if (!b || listo) return;
+    const i = +b.dataset.l;
+    if (usadas.includes(i)) usadas = usadas.filter(x => x !== i); else usadas.push(i);
+    pintar();
+  });
+  $('#w-borrar').addEventListener('click', () => { if (!listo) { usadas = []; pintar(); } });
+  $('#w-enviar').addEventListener('click', probar);
+  $('#w-listo').addEventListener('click', () => { if (!listo) { listo = true; guardar('palabras', {halladas}); final(); } });
+
+  function probar(){
+    if (listo) return;
+    const p = usadas.map(i => letras[i]).join('');
+    if (p.length < 3) { avisar('Tiene que ser de tres letras para arriba'); return; }
+    if (halladas.includes(p)) { avisar('Esa ya la tenías'); usadas = []; pintar(); return; }
+    if (!tablero.ok.includes(p)) { avisar('Esa no la tengo en la lista'); usadas = []; pintar(); return; }
+    halladas.push(p);
+    usadas = []; pintar();
+    avisar(p.length >= 7 ? '¡Muy buena!' : '¡Va una!');
+    guardar('palabras', {halladas});
+    if (halladas.length === tablero.ok.length) { listo = true; final(); }
+  }
+
+  function final(){
+    $('#w-enviar').style.display = 'none'; $('#w-borrar').style.display = 'none'; $('#w-listo').style.display = 'none';
+    const largas = halladas.filter(p => p.length >= 7).length;
+    const faltan = tablero.ok.filter(p => !halladas.includes(p));
+    cerrar($('#w-final'),
+      halladas.length === tablero.ok.length ? '¡Las encontraste todas!' : 'Hasta acá llegaste',
+      `Encontraste ${halladas.length} de ${tablero.ok.length}.` +
+      (faltan.length ? ` Se te escaparon: <b>${faltan.join(', ').toLowerCase()}</b>.` : ''),
+      halladas.length + '/' + tablero.ok.length,
+      `Palabras escondidas ${halladas.length}/${tablero.ok.length}` +
+      (largas ? `\n${largas} de siete letras o más` : ''));
+  }
+})();
+
+/* ───────── arranque ───────── */
+pintarMenu();
+ir(location.hash.slice(1));
+</script>
+</body>
+</html>
